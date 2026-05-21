@@ -3,7 +3,11 @@ from pathlib import Path
 import pytest
 
 from periscope.cli import build_parser, parse_observing_date, resolve_target_list
-from periscope.targets import DEFAULT_TARGET_LIST, load_target_names
+from periscope.targets import (
+    DEFAULT_TARGET_LIST,
+    INCLUDED_TARGET_LISTS,
+    load_target_names,
+)
 
 
 def test_parser_defaults_to_sample_target_list():
@@ -28,6 +32,14 @@ def test_resolve_target_list_falls_back_to_source_tree_sample():
 
     assert path.name == "aa_year1_paper.lst"
     assert path.is_file()
+
+
+def test_included_target_lists_are_resolvable_and_non_empty():
+    for target_list in INCLUDED_TARGET_LISTS:
+        path = resolve_target_list(target_list)
+
+        assert path.is_file()
+        assert load_target_names(path)
 
 
 def test_load_target_names_strips_blank_lines(tmp_path: Path):

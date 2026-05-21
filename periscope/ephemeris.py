@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import re
 import time
 from pathlib import Path
 from typing import Iterable
@@ -27,6 +28,7 @@ EPHEMERIS_COLUMNS = [
     "mean_v",
     "mean_ta",
 ]
+AMBIGUOUS_TARGET_PREFIX = "Ambiguous target name"
 
 
 def empty_ephemeris_frame() -> pd.DataFrame:
@@ -74,6 +76,36 @@ def resolve_targets(objects: Iterable[str] | str | Path | None) -> list[str]:
     if not targets:
         raise ValueError("No target names were provided.")
     return targets
+
+
+def _normalize_designation(value: str) -> str:
+    """Return a whitespace-normalized designation for Horizons table matching."""
+    return " ".join(value.upper().split())
+
+
+def _latest_ambiguous_record_id(target: str, error_message: str) -> str | None:
+    """Extract the newest matching Horizons record id from an ambiguity table."""
+    if AMBIGUOUS_TARGET_PREFIX not in error_message:
+        return None
+
+    normalized_target = _normalize_designation(target)
+    candidates: list[tuple[int, int, str]] = []
+    for line in error_message.splitlines():
+        parts = re.split(r"\s{2,}", line.strip())
+        if len(parts) < 4 or not parts[0].isdigit() or not parts[1].isdigit():
+            continue
+
+        record_id = parts[0]
+        epoch_year = int(parts[1])
+        match_designation = _normalize_designation(parts[2])
+        primary_designation = _normalize_designation(parts[3])
+        if normalized_target in {match_designation, primary_designation}:
+            candidates.append((epoch_year, int(record_id), record_id))
+
+    if not candidates:
+        return None
+
+    return max(candidates)[2]
 
 
 def _local_noon_window(
@@ -152,17 +184,20 @@ def fetch_minor_planet_data_local_noon(
     all_rows: list[pd.DataFrame] = []
     for object_index, target in enumerate(targets, start=1):
         print(f"Checking ephemeris for {object_index}/{len(targets)}: {target}...")
-        horizons_obj = Horizons(
-            id=target,
-            location=site_code,
-            epochs={"start": start_str, "stop": end_str, "step": step},
-        )
+        horizons_id = target
+        retried_ambiguity = False
+        unrecoverable_error = False
         ephem = None
 
         # Target lists often contain objects that are not visible for the chosen
         # night or are ambiguous in Horizons. Keep processing the rest of the
         # list so one miss does not make the whole planning session fail.
         for attempt in range(1, max_tries + 1):
+            horizons_obj = Horizons(
+                id=horizons_id,
+                location=site_code,
+                epochs={"start": start_str, "stop": end_str, "step": step},
+            )
             try:
                 ephem = horizons_obj.ephemerides(
                     skip_daylight=skip_daylight,
@@ -178,11 +213,22 @@ def fetch_minor_planet_data_local_noon(
                     print(f"Retrying in {pause_seconds:g} seconds...")
                     time.sleep(pause_seconds)
             except ValueError as exc:
+                record_id = _latest_ambiguous_record_id(target, str(exc))
+                if record_id is not None and not retried_ambiguity:
+                    print(
+                        f"{target} is ambiguous in Horizons; retrying with "
+                        f"latest matching record {record_id}."
+                    )
+                    horizons_id = record_id
+                    retried_ambiguity = True
+                    continue
                 print(f"Skipping {target} due to Horizons error: {exc}")
+                unrecoverable_error = True
                 break
 
         if ephem is None:
-            print(f"Giving up on {target} after {max_tries} attempts.")
+            if not unrecoverable_error:
+                print(f"Giving up on {target} after {max_tries} attempts.")
             continue
 
         if len(ephem) == 0:

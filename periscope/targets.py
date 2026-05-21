@@ -5,6 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 
 DEFAULT_TARGET_LIST = Path("target_lists") / "aa_year1_paper.lst"
+INCLUDED_TARGET_LISTS = (
+    DEFAULT_TARGET_LIST,
+    Path("target_lists") / "MBC.lst",
+    Path("target_lists") / "NEMBC.lst",
+)
 
 
 def load_target_names(path: str | Path) -> list[str]:

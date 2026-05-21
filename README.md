@@ -32,13 +32,22 @@ periscope --date 2026-01-01
 By default, the command reads the bundled sample list at
 `target_lists/aa_year1_paper.lst`, uses Apache Point Observatory / Horizons site
 code `705`, samples the ephemerides every 15 minutes, and serves the Dash app at
-`http://127.0.0.1:8050`.
+`http://127.0.0.1:8050`. The bundled target lists are:
+
+- `target_lists/aa_year1_paper.lst`
+- `target_lists/MBC.lst`
+- `target_lists/NEMBC.lst`
 
 Use another target list by passing a text file with one object name per line:
 
 ```bash
 periscope --objects target_lists/aa_year1_paper.lst --date 2026-01-01
+periscope --objects target_lists/MBC.lst --date 2026-01-01
+periscope --objects target_lists/NEMBC.lst --date 2026-01-01
 ```
+
+If Horizons reports a short periodic-comet designation as ambiguous, PeriScope
+retries with the newest matching Horizons record.
 
 Other useful options:
 

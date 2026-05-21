@@ -30,7 +30,11 @@ include = ["periscope*"]
 periscope = ["py.typed"]
 
 [tool.setuptools.data-files]
-target_lists = ["target_lists/aa_year1_paper.lst"]
+target_lists = [
+    "target_lists/aa_year1_paper.lst",
+    "target_lists/MBC.lst",
+    "target_lists/NEMBC.lst",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
