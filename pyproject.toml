@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "periscope-planner"
+version = "0.1.0"
+description = "Dash observation-planning tool for minor-planet elevation and true-anomaly filtering."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "astroquery",
+    "dash",
+    "numpy",
+    "pandas",
+    "plotly",
+    "requests",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[project.scripts]
+periscope = "periscope.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["periscope*"]
+
+[tool.setuptools.package-data]
+periscope = ["py.typed"]
+
+[tool.setuptools.data-files]
+target_lists = ["target_lists/aa_year1_paper.lst"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
