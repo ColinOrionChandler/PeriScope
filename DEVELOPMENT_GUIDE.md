@@ -84,8 +84,12 @@ intentionally customized to `periscope-planner`.
 Start a clean update branch and run:
 
 ```bash
-copier update --vcs-ref <reviewed-template-tag>
+bash .update_template.sh <reviewed-template-tag>
 ```
+
+The helper invokes `copier update`, skips template tasks, and excludes intentionally
+omitted starter files, notebook scaffolding, and publishing/scheduled workflows.
+Use it instead of a bare update, which can recreate omitted static template files.
 
 Review every change and resolve any `.rej` files before committing. Do not run
 the template's new-project initialization script in this existing repository.
@@ -103,7 +107,7 @@ Retain these deliberate customizations:
   benchmarks, external notifications, or scheduled smoke jobs.
 - The tailored setup script, developer guide, and original README examples.
 
-A same-version Copier update should be a no-op after merging customizations.
+A same-version update through the helper should be a no-op after merging customizations.
 Run the full validation commands above after a real upgrade. The optional
 Read the Docs configuration is prepared but no hosted project has been activated.
 The project has no license file; selecting a license remains a separate decision.

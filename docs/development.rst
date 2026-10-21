@@ -30,9 +30,10 @@ clean branch and select a reviewed template release:
 
 .. code-block:: bash
 
-   copier update --vcs-ref <reviewed-template-tag>
+   bash .update_template.sh <reviewed-template-tag>
 
-Review conflicts and retain the distribution name, CLI, bundled resources, and
+The helper invokes ``copier update`` while preserving intentionally omitted
+starter files and publishing workflows. Review conflicts and retain the distribution name, CLI, bundled resources, and
 workflow customizations. The repository's
 `development guide <https://github.com/ColinOrionChandler/PeriScope/blob/main/DEVELOPMENT_GUIDE.md>`_
 records the full update checklist. Do not run the template's new-project
