@@ -24,7 +24,7 @@ def test_typed_marker_is_installed():
 def test_bundled_lists_resolve_outside_checkout(monkeypatch, tmp_path, target_list):
     monkeypatch.chdir(tmp_path)
     resolved = resolve_target_list(target_list)
-    assert resolved.is_relative_to(Path(periscope.__file__).parent)
+    assert resolved.is_relative_to(Path(periscope.__file__).resolve().parent)
     assert load_target_names(resolved)
 
 
