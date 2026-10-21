@@ -34,9 +34,7 @@ def build_color_map(df: pd.DataFrame) -> dict[str, str]:
         return {}
 
     base_colors = px.colors.qualitative.Alphabet
-    unique_targets = (
-        df[["target", "object_index"]].drop_duplicates().sort_values("object_index")
-    )
+    unique_targets = df[["target", "object_index"]].drop_duplicates().sort_values("object_index")
     return {
         row.target: base_colors[(int(row.object_index) - 1) % len(base_colors)]
         for row in unique_targets.itertuples(index=False)
@@ -52,9 +50,7 @@ def _filter_ephemerides(
     min_mag, max_mag = mag_range
     min_ta, max_ta = ta_range
 
-    df_filtered = data_df[
-        (data_df["mean_v"] >= min_mag) & (data_df["mean_v"] <= max_mag)
-    ].copy()
+    df_filtered = data_df[(data_df["mean_v"] >= min_mag) & (data_df["mean_v"] <= max_mag)].copy()
 
     # Keep these coercions near the callbacks because Dash interactions can
     # surface old cached dataframes from earlier package versions during reloads.
@@ -63,9 +59,7 @@ def _filter_ephemerides(
             df_filtered[column] = pd.to_numeric(df_filtered[column], errors="coerce")
 
     return df_filtered[
-        df_filtered["mean_ta"].apply(
-            lambda value: keep_angle_excluding(value, min_ta, max_ta)
-        )
+        df_filtered["mean_ta"].apply(lambda value: keep_angle_excluding(value, min_ta, max_ta))
     ]
 
 
@@ -201,10 +195,7 @@ def create_app(
             )
 
         fig.update_layout(
-            title=(
-                f"{title_label} - Minor Planet Elevations "
-                f"(Site {site_code}), {title_local_date}"
-            ),
+            title=(f"{title_label} - Minor Planet Elevations (Site {site_code}), {title_local_date}"),
             xaxis=dict(title="UTC Time", type="date"),
             yaxis=dict(title="Elevation (degrees)", range=[0, 90]),
         )
@@ -234,17 +225,14 @@ def create_app(
         )
 
         if not df_filtered.empty:
-            unique_times = sorted(
-                pd.to_datetime(df_filtered["datetime_utc"]).dropna().unique()
-            )
+            unique_times = sorted(pd.to_datetime(df_filtered["datetime_utc"]).dropna().unique())
             slider_min = 0
             slider_max = max(len(unique_times) - 1, 0)
             slider_value = slider_max
             selected_ts = pd.Timestamp(unique_times[slider_value])
             tick_positions = sorted({0, slider_max // 2, slider_max})
             slider_marks = {
-                pos: pd.Timestamp(unique_times[pos]).strftime("%m-%d %H:%M")
-                for pos in tick_positions
+                pos: pd.Timestamp(unique_times[pos]).strftime("%m-%d %H:%M") for pos in tick_positions
             }
             time_text = f"RA/Dec time: {selected_ts.strftime('%Y-%m-%d %H:%M UTC')}"
         else:
@@ -289,9 +277,7 @@ def create_app(
             )
             return fig
 
-        unique_times = sorted(
-            pd.to_datetime(df_filtered["datetime_utc"]).dropna().unique()
-        )
+        unique_times = sorted(pd.to_datetime(df_filtered["datetime_utc"]).dropna().unique())
         if not unique_times:
             fig.update_layout(
                 title="RA/Dec at selected time",
