@@ -18,9 +18,7 @@ def get_site_timezone(site_code: str) -> ZoneInfo:
         timezone_name = SITE_TIMEZONES[site_code]
     except KeyError as exc:
         supported = ", ".join(sorted(SITE_TIMEZONES))
-        raise ValueError(
-            f"Unsupported site code {site_code!r}. Supported codes: {supported}."
-        ) from exc
+        raise ValueError(f"Unsupported site code {site_code!r}. Supported codes: {supported}.") from exc
 
     try:
         return ZoneInfo(timezone_name)

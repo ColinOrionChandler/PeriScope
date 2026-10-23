@@ -5,8 +5,8 @@ from __future__ import annotations
 import datetime as dt
 import re
 import time
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 import pandas as pd
@@ -66,10 +66,7 @@ def resolve_targets(objects: Iterable[str] | str | Path | None) -> list[str]:
         targets = ["Ceres", "Pallas", "Vesta"]
     elif isinstance(objects, (str, Path)):
         object_path = Path(objects).expanduser()
-        if object_path.is_file():
-            targets = load_target_names(object_path)
-        else:
-            targets = [str(objects)]
+        targets = load_target_names(object_path) if object_path.is_file() else [str(objects)]
     else:
         targets = [str(target).strip() for target in objects if str(target).strip()]
 
@@ -127,8 +124,8 @@ def _local_noon_window(
         tzinfo=local_tz,
     )
     local_noon_end = local_noon_start + dt.timedelta(days=1)
-    start_utc = local_noon_start.astimezone(dt.timezone.utc)
-    end_utc = local_noon_end.astimezone(dt.timezone.utc)
+    start_utc = local_noon_start.astimezone(dt.UTC)
+    end_utc = local_noon_end.astimezone(dt.UTC)
     return (
         start_utc.strftime("%Y-%m-%d %H:%M"),
         end_utc.strftime("%Y-%m-%d %H:%M"),
@@ -176,10 +173,7 @@ def fetch_minor_planet_data_local_noon(
     targets = resolve_targets(objects)
     airmass_lessthan = _airmass_limit_for_elevation(min_elevation)
 
-    print(
-        f"Loaded {len(targets)} targets, starting with {targets[0]} "
-        f"and ending with {targets[-1]}."
-    )
+    print(f"Loaded {len(targets)} targets, starting with {targets[0]} and ending with {targets[-1]}.")
 
     all_rows: list[pd.DataFrame] = []
     for object_index, target in enumerate(targets, start=1):
@@ -205,10 +199,7 @@ def fetch_minor_planet_data_local_noon(
                 )
                 break
             except (SSLError, ConnectionError, Timeout) as exc:
-                print(
-                    f"Horizons network error for {target} "
-                    f"(attempt {attempt}/{max_tries}): {exc}"
-                )
+                print(f"Horizons network error for {target} (attempt {attempt}/{max_tries}): {exc}")
                 if attempt < max_tries:
                     print(f"Retrying in {pause_seconds:g} seconds...")
                     time.sleep(pause_seconds)
