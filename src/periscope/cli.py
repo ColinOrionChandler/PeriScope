@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 from .sites import DEFAULT_SITE_CODE, SITE_TIMEZONES, get_site_timezone
-from .targets import DEFAULT_TARGET_LIST, load_target_names
+from .targets import DEFAULT_TARGET_LIST, INCLUDED_TARGET_LISTS, load_target_names
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -78,28 +77,21 @@ def parse_observing_date(date_string: str | None) -> str | None:
     try:
         return dt.date.fromisoformat(date_string).isoformat()
     except ValueError as exc:
-        raise ValueError(
-            "--date must use YYYY-MM-DD format, for example 2026-01-01"
-        ) from exc
+        raise ValueError("--date must use YYYY-MM-DD format, for example 2026-01-01") from exc
 
 
 def resolve_target_list(path: str | Path) -> Path:
-    """Resolve a target list path from the CWD, source tree, or install prefix."""
+    """Prefer an existing user file, then resolve a known bundled target list."""
     candidate = Path(path).expanduser()
     if candidate.is_file():
         return candidate
 
-    if not candidate.is_absolute():
-        # Editable installs and source-tree invocations should find the bundled
-        # sample list without requiring users to type an absolute path.
-        source_tree_candidate = Path(__file__).resolve().parents[1] / candidate
-        if source_tree_candidate.is_file():
-            return source_tree_candidate
-
-        # Non-editable installs place data files under the environment prefix.
-        installed_data_candidate = Path(sys.prefix) / candidate
-        if installed_data_candidate.is_file():
-            return installed_data_candidate
+    if candidate in INCLUDED_TARGET_LISTS:
+        # Package data is present in both editable and ordinary wheel installs.
+        # Only these documented names are aliases; other missing paths stay errors.
+        bundled_candidate = Path(__file__).resolve().parent / candidate
+        if bundled_candidate.is_file():
+            return bundled_candidate
 
     return candidate
 

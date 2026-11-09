@@ -7,3 +7,17 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 .DS_Store
+
+# Template tooling and build outputs
+.venv-*/
+/build/
+/dist/
+/docs/build/
+/docs/autoapi/
+/_readthedocs/
+/htmlcov/
+.coverage*
+coverage.xml
+.ruff_cache/
+.mypy_cache/
+/src/periscope/_version.py
